@@ -72,7 +72,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
       - name: Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: |
+          if [ "${{ steps.detect-package-manager.outputs.manager }}" = "npm" ]; then
+            npm install
+          elif [ "${{ steps.detect-package-manager.outputs.manager }}" = "yarn" ]; then
+            yarn install
+          else
+            echo "Unsupported package manager"
+          exit 1
+          fi
+      - name: Validate dependencies
+        run: |
+          if ! npx --no-install next --version; then
+            echo "Next.js is not installed. Please check your dependencies."
+            exit 1
+          fi
       - name: Build with Next.js
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
       - name: Upload artifact
